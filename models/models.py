@@ -267,3 +267,81 @@ class Base(models.AbstractModel):
 
         """
         return format_duration(self[fname])
+
+    def jsonify_async(
+        self,
+        parser=None,
+        export_id=None,
+        name=None,
+        batch_size=100,
+        with_fieldname=False,
+        callback_method=None,
+        callback_record_id=None,
+        auto_start=True,
+    ):
+        """Queue records for async JSON export via queue_job.
+
+        Args:
+            parser: Parser configuration (list or dict). Mutually exclusive with export_id.
+            export_id: ir.exports record ID to use for parser. Mutually exclusive with parser.
+            name: Description for the export job.
+            batch_size: Records per batch (default 100).
+            with_fieldname: Include field names in output.
+            callback_method: Method to call on completion (format: 'model.method').
+            callback_record_id: Record ID to call callback method on.
+            auto_start: Automatically start the job (default True).
+
+        Returns:
+            jsonify.job record
+
+        Example:
+            # Using parser directly
+            records.jsonify_async(parser=['name', 'email'], name='Contact Export')
+
+            # Using export template
+            records.jsonify_async(export_id=export.id, batch_size=500)
+
+            # With callback
+            records.jsonify_async(
+                parser=['name'],
+                callback_method='my.model.on_export_complete',
+                callback_record_id=self.id
+            )
+        """
+        import json
+
+        if not self:
+            raise UserError(_("No records to export."))
+
+        if not parser and not export_id:
+            raise UserError(_("Either parser or export_id must be provided."))
+
+        if parser and export_id:
+            raise UserError(_("Cannot specify both parser and export_id."))
+
+        # Convert simple parser to JSON string for storage
+        parser_json = None
+        if parser:
+            if isinstance(parser, list):
+                parser = convert_simple_to_full_parser(parser)
+            parser_json = json.dumps(parser)
+
+        # Create job record
+        job_vals = {
+            'name': name or f"JSON Export: {self._description or self._name}",
+            'model_name': self._name,
+            'record_ids': json.dumps(self.ids),
+            'parser': parser_json,
+            'export_id': export_id,
+            'batch_size': batch_size,
+            'with_fieldname': with_fieldname,
+            'callback_method': callback_method,
+            'callback_record_id': callback_record_id,
+        }
+
+        job = self.env['jsonify.job'].create(job_vals)
+
+        if auto_start:
+            job.action_start()
+
+        return job

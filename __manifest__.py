@@ -6,8 +6,8 @@
 
 {
     "name": "JSONifier",
-    "summary": "JSON-ify data for all models",
-    "version": "18.0.1.1.0",
+    "summary": "JSON-ify data for all models with optional async support",
+    "version": "18.0.2.0.0",
     "category": "Technical",
     "website": "https://simplify-erp.de/apps",
     "author": "PowerOn | Wapsol GmbH, Akretion, ACSONE, Camptocamp",
@@ -15,15 +15,21 @@
     "price": "0.0",
     "currency": "EUR",
     "installable": True,
-    "depends": ["base"],
+    "depends": ["base", "mail"],
     "data": [
         "security/ir.model.access.csv",
         "views/ir_exports_view.xml",
         "views/ir_exports_resolver_view.xml",
+        "views/jsonify_job_views.xml",
     ],
     "demo": [
         "demo/resolver_demo.xml",
         "demo/export_demo.xml",
         "demo/ir.exports.line.csv",
     ],
+    "external_dependencies": {
+        "python": [],
+    },
+    # queue_job is optional - async features require it
+    # Install from: https://github.com/euroblaze/queue_job
 }

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Tree View -->
+    <record id="jsonify_job_view_list" model="ir.ui.view">
+        <field name="name">jsonify.job.list</field>
+        <field name="model">jsonify.job</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'pending'"
+                  decoration-warning="state == 'processing'"
+                  decoration-success="state == 'done'"
+                  decoration-danger="state == 'failed'">
+                <field name="name" />
+                <field name="model_name" />
+                <field name="state" widget="badge"
+                       decoration-info="state == 'pending'"
+                       decoration-warning="state == 'processing'"
+                       decoration-success="state == 'done'"
+                       decoration-danger="state == 'failed'" />
+                <field name="result_count" />
+                <field name="create_date" />
+                <field name="completed_at" />
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="jsonify_job_view_form" model="ir.ui.view">
+        <field name="name">jsonify.job.form</field>
+        <field name="model">jsonify.job</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" string="Start Export"
+                            type="object" class="btn-primary"
+                            invisible="state != 'pending'" />
+                    <button name="action_retry" string="Retry"
+                            type="object" class="btn-warning"
+                            invisible="state != 'failed'" />
+                    <button name="action_download" string="Download Result"
+                            type="object" class="btn-success"
+                            invisible="state != 'done'" />
+                    <button name="action_cancel" string="Cancel"
+                            type="object"
+                            invisible="state not in ('pending', 'processing')" />
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,processing,done" />
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Export Description" />
+                        </h1>
+                    </div>
+                    <group>
+                        <group name="source" string="Source">
+                            <field name="model_name" />
+                            <field name="export_id" />
+                            <field name="batch_size" />
+                            <field name="with_fieldname" />
+                        </group>
+                        <group name="result" string="Result">
+                            <field name="result_count" />
+                            <field name="result_attachment_id" />
+                            <field name="job_uuid" groups="base.group_no_one" />
+                        </group>
+                    </group>
+                    <group>
+                        <group name="timing" string="Timing">
+                            <field name="create_date" />
+                            <field name="started_at" />
+                            <field name="completed_at" />
+                        </group>
+                        <group name="callback" string="Callback" groups="base.group_no_one">
+                            <field name="callback_method" />
+                            <field name="callback_record_id" />
+                        </group>
+                    </group>
+                    <group name="advanced" string="Advanced" groups="base.group_no_one">
+                        <field name="record_ids" />
+                        <field name="parser" />
+                    </group>
+                    <group name="error" string="Error" invisible="not error_message">
+                        <field name="error_message" nolabel="1" colspan="2" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="jsonify_job_view_search" model="ir.ui.view">
+        <field name="name">jsonify.job.search</field>
+        <field name="model">jsonify.job</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name" />
+                <field name="model_name" />
+                <filter name="pending" string="Pending" domain="[('state', '=', 'pending')]" />
+                <filter name="processing" string="Processing" domain="[('state', '=', 'processing')]" />
+                <filter name="done" string="Completed" domain="[('state', '=', 'done')]" />
+                <filter name="failed" string="Failed" domain="[('state', '=', 'failed')]" />
+                <separator />
+                <filter name="today" string="Today"
+                        domain="[('create_date', '>=', context_today().strftime('%Y-%m-%d'))]" />
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}" />
+                    <filter name="group_model" string="Model" context="{'group_by': 'model_name'}" />
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="jsonify_job_action" model="ir.actions.act_window">
+        <field name="name">JSON Export Jobs</field>
+        <field name="res_model">jsonify.job</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_today': 1}</field>
+    </record>
+
+    <!-- Menu -->
+    <menuitem id="jsonify_job_menu"
+              name="JSON Export Jobs"
+              action="jsonify_job_action"
+              parent="base.next_id_2"
+              sequence="50" />
+</odoo>

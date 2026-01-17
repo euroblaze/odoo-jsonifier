@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_ir_exports_resolver,ir.exports.resolver,model_ir_exports_resolver,base.group_system,1,1,1,1
+access_jsonify_job_system,jsonify.job system,model_jsonify_job,base.group_system,1,1,1,1
+access_jsonify_job_user,jsonify.job user,model_jsonify_job,base.group_user,1,1,1,0
